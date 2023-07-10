@@ -33,12 +33,16 @@ def add_item():
 # Function to update inventory
 def show_inventory():
     # Fetch all items from the database
+    inventory_listbox.insert(tk.END, "Name - Quantity - Cost")
+
     c.execute("SELECT * FROM items")
     items = c.fetchall()
 
     # Update the inventory listbox
     for item in items:
         inventory_listbox.insert(tk.END, f"{item[1].capitalize()} - {item[2]} - {item[3]}")
+
+    inventory_listbox.delete(tk.END)
 
 
 def update_item():
@@ -70,6 +74,9 @@ def update_item():
 
 root = tk.Tk()
 root.title("Grocery Store Management")
+root.geometry("650x800")
+font_style = ("Courier", 24)
+root.option_add("*Font", font_style)
 
 # Label and entry fields for item details
 name_label = tk.Label(root, text="Item Name:")
@@ -98,14 +105,14 @@ update_button.pack()
 inventory_label = tk.Label(root, text="Inventory:")
 inventory_label.pack()
 
-# Listbox to display inventory
-inventory_listbox = tk.Listbox(root)
-inventory_listbox.pack()
-inventory_listbox.insert(tk.END, "Name - Quantity - Cost")
-
 # Button to update inventory
 update_button = tk.Button(root, text="Show Inventory", command=show_inventory)
 update_button.pack()
+
+# Listbox to display inventory
+inventory_listbox = tk.Listbox(root)
+inventory_listbox.pack()
+inventory_listbox.config(width=40, height=15)
 
 root.mainloop()
 
