@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import messagebox
 import sqlite3
 
 conn = sqlite3.connect('store.db')
@@ -15,13 +16,9 @@ c.execute('''
 
 conn.commit()
 
-root = tk.Tk()
-root.title("Grocery Store Management")
 
-
-# Function to add an item to the database
 def add_item():
-    name = name_entry.get().strip().lower()
+    name = name_entry.get().strip()
     quantity = int(quantity_entry.get())
     cost = float(cost_entry.get())
 
@@ -40,14 +37,39 @@ def show_inventory():
     items = c.fetchall()
 
     # Update the inventory listbox
-    inventory_listbox.delete(0, tk.END)
     for item in items:
-        inventory_listbox.insert(tk.END, f"{item[1]} - {item[2]} - {item[3]}")
+        inventory_listbox.insert(tk.END, f"{item[1].capitalize()} - {item[2]} - {item[3]}")
 
 
 def update_item():
-    pass
+    name = name_entry.get().strip()
+    quantity = int(quantity_entry.get())
+    cost = float(cost_entry.get())
 
+    # Check if the item exists in the database
+    c.execute("SELECT * FROM items WHERE name=?", (name,))
+    item = c.fetchone()
+
+    if item:
+        # Update the quantity and cost of the item in the database
+        c.execute("UPDATE items SET quantity=?, cost=? WHERE name=?", (quantity, cost, name))
+        conn.commit()
+        # Clear the entry fields
+        name_entry.delete(0, tk.END)
+        quantity_entry.delete(0, tk.END)
+        cost_entry.delete(0, tk.END)
+        # Clear the inventory listbox
+        inventory_listbox.delete(0, tk.END)
+        # Update the inventory listbox with the updated item details
+        show_inventory()
+    else:
+        # Display an error message if the item doesn't exist in the database
+        error_message = "Item not found in the database."
+        tk.messagebox.showerror("Error", error_message)
+
+
+root = tk.Tk()
+root.title("Grocery Store Management")
 
 # Label and entry fields for item details
 name_label = tk.Label(root, text="Item Name:")
@@ -79,7 +101,7 @@ inventory_label.pack()
 # Listbox to display inventory
 inventory_listbox = tk.Listbox(root)
 inventory_listbox.pack()
-inventory_listbox.insert( tk.END, "Name - Quantity - Cost")
+inventory_listbox.insert(tk.END, "Name - Quantity - Cost")
 
 # Button to update inventory
 update_button = tk.Button(root, text="Show Inventory", command=show_inventory)
