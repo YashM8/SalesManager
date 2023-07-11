@@ -1,6 +1,7 @@
-import tkinter as tk
-from tkinter import messagebox
 import sqlite3
+import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox
 
 conn = sqlite3.connect('store.db')
 c = conn.cursor()
@@ -33,16 +34,16 @@ def add_item():
 # Function to update inventory
 def show_inventory():
     # Fetch all items from the database
-    inventory_listbox.insert(tk.END, "Name - Quantity - Cost")
+    inventory_treeview.delete(*inventory_treeview.get_children())
+    inventory_treeview.insert("", "end", values=("", "", ""), tags=("header",))
 
     c.execute("SELECT * FROM items")
     items = c.fetchall()
 
-    # Update the inventory listbox
+    # Update the inventory treeview
     for item in items:
-        inventory_listbox.insert(tk.END, f"{item[1].capitalize()} - {item[2]} - {item[3]}")
-
-    inventory_listbox.delete(tk.END)
+        name = item[1].title()
+        inventory_treeview.insert("", "end", values=(name, item[2], item[3]), tags=("item",))
 
 
 def update_item():
@@ -63,8 +64,7 @@ def update_item():
         quantity_entry.delete(0, tk.END)
         cost_entry.delete(0, tk.END)
         # Clear the inventory listbox
-        inventory_listbox.delete(0, tk.END)
-        # Update the inventory listbox with the updated item details
+        inventory_treeview.delete(*inventory_treeview.get_children())
         show_inventory()
     else:
         # Display an error message if the item doesn't exist in the database
@@ -110,11 +110,37 @@ update_button = tk.Button(root, text="Show Inventory", command=show_inventory)
 update_button.pack()
 
 # Listbox to display inventory
-inventory_listbox = tk.Listbox(root)
-inventory_listbox.pack()
-inventory_listbox.config(width=40, height=15)
+# inventory_listbox = tk.Listbox(root)
+# inventory_listbox.pack()
+# inventory_listbox.config(width=40, height=15)
+
+inventory_treeview = ttk.Treeview(root, columns=("name", "quantity", "cost"))
+inventory_treeview.heading("#0", text="")
+inventory_treeview.heading("name", text="Name")
+inventory_treeview.heading("quantity", text="Quantity")
+inventory_treeview.heading("cost", text="Cost")
+
+# Set the column widths
+inventory_treeview.column("#0", width=0, stretch=tk.NO)
+inventory_treeview.column("name", width=150, anchor=tk.W)
+inventory_treeview.column("quantity", width=150, anchor=tk.CENTER)
+inventory_treeview.column("cost", width=150, anchor=tk.E)
+
+# # Apply tag configuration for header and items
+inventory_treeview.tag_configure("header", font=('Courier', 20, 'bold'))
+inventory_treeview.tag_configure("item", font=('Courier', 20))
+
+# Create a Scrollbar widget
+scrollbar = ttk.Scrollbar(root, orient="vertical", command=inventory_treeview.yview)
+scrollbar.pack(side="right", fill="y")
+
+# Create a scrollbar for the treeview
+inventory_treeview.configure(yscrollcommand=scrollbar.set)
+inventory_treeview.configure(height=20)  # Change the height as desired
+
+# Grid layout for the treeview and scrollbar
+inventory_treeview.pack()
 
 root.mainloop()
-
 # Close the database connection when the application is closed
 conn.close()
